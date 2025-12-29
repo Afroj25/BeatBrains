@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeatBrains - AI Song Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .tagline {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .mood-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .mood-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .mood-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .mood-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .mood-btn.happy { border-color: #ffd700; }
+        .mood-btn.sad { border-color: #4682b4; }
+        .mood-btn.motivational { border-color: #ff6347; }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            display: block;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .audio-player {
+            margin-top: 20px;
+            display: none;
+        }
+
+        audio {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .examples {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+
+        .examples strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 BeatBrains</h1>
+        <p class="tagline">Transform your text into AI-generated songs</p>
+
+        <div class="input-group">
+            <label for="text-input">Enter Your Text (lyrics, notes, or any text)</label>
+            <textarea 
+                id="text-input" 
+                placeholder="Example: Study hard, reach for the stars, never give up on your dreams..."
+                maxlength="500"
+            ></textarea>
+            <div class="char-count">
+                <span id="char-count">0</span> / 500 characters
+            </div>
+        </div>
+
+        <div class="examples">
+            <strong>Try these:</strong> "Walking in the sunshine, feeling so fine" • "Every day is a new beginning" • "Study notes about photosynthesis"
+        </div>
+
+        <div class="input-group">
+            <label>Select Mood</label>
+            <div class="mood-selector">
+                <button class="mood-btn happy active" data-mood="happy">
+                    😊 Happy
+                </button>
+                <button class="mood-btn sad" data-mood="sad">
+                    😢 Sad
+                </button>
+                <button class="mood-btn motivational" data-mood="motivational">
+                    🔥 Motivational
+                </button>
+            </div>
+        </div>
+
+        <button class="generate-btn" id="generate-btn">
+            Generate My Song 🎶
+        </button>
+
+        <div class="status" id="status"></div>
+
+        <div class="audio-player" id="audio-player">
+            <audio controls id="audio-element"></audio>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('text-input');
+        const charCount = document.getElementById('char-count');
+        const moodButtons = document.querySelectorAll('.mood-btn');
+        const generateBtn = document.getElementById('generate-btn');
+        const statusDiv = document.getElementById('status');
+        const audioPlayer = document.getElementById('audio-player');
+        const audioElement = document.getElementById('audio-element');
+
+        let selectedMood = 'happy';
+
+        // Character counter
+        textInput.addEventListener('input', () => {
+            charCount.textContent = textInput.value.length;
+        });
+
+        // Mood selector
+        moodButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                moodButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMood = btn.dataset.mood;
+            });
+        });
+
+        // Generate song
+        generateBtn.addEventListener('click', async () => {
+            const text = textInput.value.trim();
+
+            if (!text) {
+                showStatus('error', 'Please enter some text!');
+                return;
+            }
+
+            if (text.length < 10) {
+                showStatus('error', 'Text too short! Enter at least 10 characters.');
+                return;
+            }
+
+            // Show loading
+            generateBtn.disabled = true;
+            audioPlayer.style.display = 'none';
+            showStatus('loading', 'Generating your song... This may take 30-60 seconds ⏳');
+            statusDiv.innerHTML += '<div class="spinner"></div>';
+
+            try {
+                const API_URL = 'http://localhost:5000/generate-song';
+                
+                console.log('🚀 Sending request to backend...');
+                console.log('📝 Text:', text);
+                console.log('🎵 Mood:', selectedMood);
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        mood: selectedMood
+                    })
+                });
+
+                console.log('✅ Response status:', response.status);
+                const data = await response.json();
+                console.log('📦 Response data:', data);
+
+                if (data.status === 'success') {
+                    showStatus('success', '✅ Song generated successfully!');
+                    audioElement.src = `http://localhost:5000${data.song_url}`;
+                    audioPlayer.style.display = 'block';
+                    audioElement.play();
+                } else {
+                    showStatus('error', `Error: ${data.message}`);
+                }
+
+            } catch (error) {
+                console.error('❌ Fetch error:', error);
+                showStatus('error', `Error: ${error.message}. Make sure backend is running on port 5000!`);
+            } finally {
+                generateBtn.disabled = false;
+            }
+        });
+
+        function showStatus(type, message) {
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+    </script>
+</body>
+</html>

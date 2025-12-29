@@ -1,0 +1,6 @@
+Flask==3.0.0
+bark==1.0.0
+pydub==0.25.1
+scipy==1.11.4
+numpy==1.24.3
+torch==2.1.0
